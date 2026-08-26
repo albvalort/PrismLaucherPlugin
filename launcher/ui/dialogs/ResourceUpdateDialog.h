@@ -11,6 +11,9 @@ class Minecraft;
 class Mod;
 class ModrinthCheckUpdate;
 class FlameCheckUpdate;
+namespace Plugins {
+class PluginCheckUpdate;
+}
 class ConcurrentTask;
 
 class ResourceUpdateDialog final : public ReviewMessageBox {
@@ -47,12 +50,14 @@ class ResourceUpdateDialog final : public ReviewMessageBox {
 
     shared_qobject_ptr<ModrinthCheckUpdate> m_modrinthCheckTask;
     shared_qobject_ptr<FlameCheckUpdate> m_flameCheckTask;
+    shared_qobject_ptr<Plugins::PluginCheckUpdate> m_pluginCheckTask;
 
     ResourceFolderModel* m_resourceModel;
 
     QList<Resource*>& m_candidates;
     QList<Resource*> m_modrinthToUpdate;
     QList<Resource*> m_flameToUpdate;
+    QList<Resource*> m_pluginToUpdate;
 
     ConcurrentTask::Ptr m_secondTryMetadata;
     QList<std::tuple<Resource*, QString>> m_failedMetadata;

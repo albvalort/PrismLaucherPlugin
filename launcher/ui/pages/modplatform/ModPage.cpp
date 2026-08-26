@@ -144,6 +144,11 @@ void ModPage::triggerSearch()
 void ModPage::prepareProviderCategories()
 {
     auto [task, response] = m_api->getModCategories();
+    // Categories are optional; a provider without them returns no task.
+    if (!task) {
+        return;
+    }
+
     m_categoriesTask = task;
     connect(m_categoriesTask.get(), &Task::succeeded, this, [this, response]() {
         auto categories = m_api->loadModCategories(*response);

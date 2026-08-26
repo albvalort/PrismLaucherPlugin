@@ -1,0 +1,11 @@
+{
+  "id": "modrinth-lua",
+  "name": "Modrinth (Lua example)",
+  "version": "1.0.0",
+  "author": "albvalort",
+  "description": "Reference plugin. Reimplements Modrinth search in Lua to show what the plugin API can do end to end.",
+  "entry": "main.lua",
+  "api_version": 1,
+  "hosts": ["api.modrinth.com", "cdn.modrinth.com"],
+  "resource_types": ["mod", "resourcepack", "shaderpack", "datapack"]
+}

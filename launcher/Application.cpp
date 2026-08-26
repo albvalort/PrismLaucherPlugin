@@ -65,6 +65,7 @@
 #include "ui/pages/global/LanguagePage.h"
 #include "ui/pages/global/LauncherPage.h"
 #include "ui/pages/global/MinecraftPage.h"
+#include "ui/pages/global/PluginsPage.h"
 #include "ui/pages/global/ProxyPage.h"
 
 #include "ui/setupwizard/AutoJavaWizardPage.h"
@@ -80,6 +81,8 @@
 #include "ui/pagedialog/PageDialog.h"
 
 #include "ui/themes/ThemeManager.h"
+
+#include "plugins/PluginManager.h"
 
 #include "ApplicationMessage.h"
 
@@ -695,6 +698,10 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
         m_settings->registerSetting("MoveModsFromDownloadsDir", false);
         m_settings->registerSetting("SkinsDir", "skins");
         m_settings->registerSetting("JavaDir", "java");
+        m_settings->registerSetting("PluginsDir", "plugins");
+
+        // Plugins
+        m_settings->registerSetting("EnabledPlugins", QVariant(QStringList()));
 
 #ifdef Q_OS_MACOS
         // Folder security-scoped bookmarks
@@ -910,6 +917,7 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
             m_globalSettingsProvider->addPage<JavaPage>();
             m_globalSettingsProvider->addPage<AccountListPage>();
             m_globalSettingsProvider->addPage<APIPage>();
+            m_globalSettingsProvider->addPage<PluginsPage>();
             m_globalSettingsProvider->addPage<ExternalToolsPage>();
             m_globalSettingsProvider->addPage<ProxyPage>();
         }
@@ -956,6 +964,13 @@ Application::Application(int& argc, char** argv) : QApplication(argc, argv)
 
     // Themes
     m_themeManager = std::make_unique<ThemeManager>();
+
+    // Plugins
+    {
+        m_pluginManager = std::make_unique<Plugins::PluginManager>();
+        m_pluginManager->initialize();
+        qInfo() << "<> Plugins initialized.";
+    }
 
 #ifdef Q_OS_MACOS
     // for macOS: getting directory settings will generate URL security-scoped bookmarks if needed and not present

@@ -26,6 +26,7 @@
         "zstd"
       ]
     },
+    "lua",
     "tomlplusplus",
     "zlib"
   ]

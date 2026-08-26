@@ -1,0 +1,15 @@
+{
+  "id": "quick-links",
+  "name": "Quick Links",
+  "version": "1.0.0",
+  "author": "albvalort",
+  "description": "Adds a menu of modding reference links to the main window. Contributes no download sources.",
+  "entry": "main.lua",
+  "api_version": 1,
+  "hosts": [
+    "minecraft.wiki",
+    "docs.fabricmc.net",
+    "docs.neoforged.net",
+    "docs.papermc.io"
+  ]
+}

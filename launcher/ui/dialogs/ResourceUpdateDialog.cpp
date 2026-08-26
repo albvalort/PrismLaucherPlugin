@@ -21,6 +21,7 @@
 #include "modplatform/EnsureMetadataTask.h"
 #include "modplatform/flame/FlameCheckUpdate.h"
 #include "modplatform/modrinth/ModrinthCheckUpdate.h"
+#include "plugins/PluginCheckUpdate.h"
 
 #include <QClipboard>
 #include <QShortcut>
@@ -107,6 +108,15 @@ void ResourceUpdateDialog::checkCandidates()
                     m_failedCheckUpdate.append({ resource, reason, recoverUrl });
                 });
         checkTask.addTask(m_flameCheckTask);
+    }
+
+    if (!m_pluginToUpdate.empty()) {
+        m_pluginCheckTask.reset(new Plugins::PluginCheckUpdate(m_pluginToUpdate, versions, m_loadersList, m_resourceModel));
+        connect(m_pluginCheckTask.get(), &CheckUpdateTask::checkFailed, this,
+                [this](Resource* resource, const QString& reason, const QUrl& recoverUrl) {
+                    m_failedCheckUpdate.append({ resource, reason, recoverUrl });
+                });
+        checkTask.addTask(m_pluginCheckTask);
     }
 
     connect(&checkTask, &Task::failed, this,
@@ -241,9 +251,10 @@ void ResourceUpdateDialog::checkCandidates()
                 }
 
                 auto [maybe_installed, required_by_names, required_by_ids] = dependencyExtraInfo.value(dep->version.addonId.toString());
-                auto downloadTask = makeShared<ResourceDownloadTask>(dep->pack, dep->version, m_resourceModel, true, "dependency", required_by_ids.first());
+                auto downloadTask =
+                    makeShared<ResourceDownloadTask>(dep->pack, dep->version, m_resourceModel, true, "dependency", required_by_ids.first());
                 CheckUpdateTask::Update updatable = {
-                    dep->pack->name, dep->version.hash,   tr("Not installed"), dep->version.version,      dep->version.version_type,
+                    dep->pack->name, dep->version.hash,   tr("Not installed"), dep->version.version, dep->version.version_type,
                     changelog,       dep->pack->provider, downloadTask,        !maybe_installed
                 };
 
@@ -301,6 +312,9 @@ auto ResourceUpdateDialog::ensureMetadata() -> bool
             case ModPlatform::ResourceProvider::FLAME:
                 flameTmp.push_back(resource);
                 break;
+            case ModPlatform::ResourceProvider::PLUGIN:
+                // Only reached while recovering metadata, which needs hash lookups plugins lack.
+                break;
         }
     };
 
@@ -353,7 +367,8 @@ auto ResourceUpdateDialog::ensureMetadata() -> bool
     // prepare task for the modrinth mods
     if (!modrinthTmp.empty()) {
         auto modrinthTask = makeShared<EnsureMetadataTask>(modrinthTmp, indexDir2, ModPlatform::ResourceProvider::MODRINTH);
-        connect(modrinthTask.get(), &EnsureMetadataTask::metadataReady, this, [this](Resource* candidate) { onMetadataEnsured(candidate); });
+        connect(modrinthTask.get(), &EnsureMetadataTask::metadataReady, this,
+                [this](Resource* candidate) { onMetadataEnsured(candidate); });
         connect(modrinthTask.get(), &EnsureMetadataTask::metadataFailed, this, [this, &shouldTryOthers](Resource* candidate) {
             onMetadataFailed(candidate, shouldTryOthers.find(candidate->internalId()).value(), ModPlatform::ResourceProvider::MODRINTH);
         });
@@ -409,15 +424,20 @@ void ResourceUpdateDialog::onMetadataEnsured(Resource* resource)
         case ModPlatform::ResourceProvider::FLAME:
             m_flameToUpdate.push_back(resource);
             break;
+        case ModPlatform::ResourceProvider::PLUGIN:
+            m_pluginToUpdate.push_back(resource);
+            break;
     }
 }
 
 ModPlatform::ResourceProvider next(ModPlatform::ResourceProvider p)
 {
+    // Retries a hash lookup on the other platform; plugins have no hash lookup to retry.
     switch (p) {
         case ModPlatform::ResourceProvider::MODRINTH:
             return ModPlatform::ResourceProvider::FLAME;
         case ModPlatform::ResourceProvider::FLAME:
+        case ModPlatform::ResourceProvider::PLUGIN:
             return ModPlatform::ResourceProvider::MODRINTH;
     }
 

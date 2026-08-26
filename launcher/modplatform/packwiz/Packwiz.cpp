@@ -122,6 +122,8 @@ auto V1::createModFormat([[maybe_unused]] const QDir& index_dir,
         mod.url = mod_version.downloadUrl;
     }
 
+    mod.plugin_id = mod_pack.pluginId;
+
     mod.hash_format = mod_version.hash_type;
     mod.hash = mod_version.hash;
 
@@ -190,6 +192,18 @@ void V1::updateModIndex(const QDir& index_dir, Mod& mod)
             update = toml::table{
                 { "mod-id", mod.mod_id().toString().toStdString() },
                 { "version", mod.version().toString().toStdString() },
+            };
+            break;
+        case (ModPlatform::ResourceProvider::PLUGIN):
+            if (mod.plugin_id.isEmpty() || mod.project_id.toString().isEmpty() || mod.file_id.toString().isEmpty()) {
+                qCritical() << QString("Did not write file %1 because missing information!").arg(normalized_fname);
+                return;
+            }
+            // Generic field names, so the entry says who owns it without naming a platform.
+            update = toml::table{
+                { "plugin-id", mod.plugin_id.toStdString() },
+                { "project-id", mod.project_id.toString().toStdString() },
+                { "version-id", mod.file_id.toString().toStdString() },
             };
             break;
     }
@@ -354,6 +368,13 @@ auto V1::getIndexForMod(const QDir& index_dir, QString slug) -> Mod
             mod.provider = Provider::MODRINTH;
             mod.mod_id() = stringEntry(*mod_provider_table, "mod-id");
             mod.version() = stringEntry(*mod_provider_table, "version");
+        } else if ((mod_provider_table = update_table[ModPlatform::ProviderCapabilities::name(Provider::PLUGIN)].as_table())) {
+            // Parsed whether or not the plugin is installed: a removed plugin must not turn its
+            // resources into unrecognised files. Only update checking is skipped until it returns.
+            mod.provider = Provider::PLUGIN;
+            mod.plugin_id = stringEntry(*mod_provider_table, "plugin-id");
+            mod.project_id = stringEntry(*mod_provider_table, "project-id");
+            mod.file_id = stringEntry(*mod_provider_table, "version-id");
         } else {
             qCritical() << QString("No mod provider on mod metadata!");
             return {};

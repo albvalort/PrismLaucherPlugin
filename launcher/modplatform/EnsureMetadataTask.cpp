@@ -36,7 +36,8 @@ EnsureMetadataTask::EnsureMetadataTask(QList<Resource*>& resources, QDir dir, Mo
         auto hash_task = createNewHash(resource);
         if (!hash_task)
             continue;
-        connect(hash_task.get(), &Hashing::Hasher::resultsReady, this, [this, resource](QString hash) { m_resources.insert(hash, resource); });
+        connect(hash_task.get(), &Hashing::Hasher::resultsReady, this,
+                [this, resource](QString hash) { m_resources.insert(hash, resource); });
         connect(hash_task.get(), &Task::failed, this, [this, resource] { emitFail(resource, "", RemoveFromList::No); });
         hashTask->addTask(hash_task);
     }
@@ -117,6 +118,9 @@ void EnsureMetadataTask::executeTask()
         case (ModPlatform::ResourceProvider::FLAME):
             version_task = flameVersionsTask();
             break;
+        case (ModPlatform::ResourceProvider::PLUGIN):
+            // Needs a hash-to-project lookup, which the plugin API does not expose.
+            break;
     }
 
     auto invalidade_leftover = [this] {
@@ -136,6 +140,8 @@ void EnsureMetadataTask::executeTask()
                 break;
             case (ModPlatform::ResourceProvider::FLAME):
                 project_task = flameProjectsTask();
+                break;
+            case (ModPlatform::ResourceProvider::PLUGIN):
                 break;
         }
 
@@ -161,6 +167,11 @@ void EnsureMetadataTask::executeTask()
     else if (!m_resources.empty())
         setStatus(tr("Requesting metadata information from %1 for '%2'...")
                       .arg(ModPlatform::ProviderCapabilities::readableName(m_provider), m_resources.begin().value()->name()));
+
+    if (!version_task) {
+        invalidade_leftover();
+        return;
+    }
 
     m_currentTask = version_task;
     version_task->start();

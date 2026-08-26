@@ -73,6 +73,9 @@ class TranslationsModel;
 class ITheme;
 class MCEditTool;
 class ThemeManager;
+namespace Plugins {
+class PluginManager;
+}
 class IconTheme;
 class BaseInstance;
 class MinecraftInstance;
@@ -126,6 +129,8 @@ class Application : public QApplication {
     QIcon logo();
 
     ThemeManager* themeManager() { return m_themeManager.get(); }
+
+    Plugins::PluginManager* pluginManager() { return m_pluginManager.get(); }
 
     ExternalUpdater* updater() { return m_updater.get(); }
 
@@ -268,6 +273,7 @@ class Application : public QApplication {
     std::unique_ptr<MCEditTool> m_mcedit;
     QSet<QString> m_features;
     std::unique_ptr<ThemeManager> m_themeManager;
+    std::unique_ptr<Plugins::PluginManager> m_pluginManager;
 
     QMap<QString, std::shared_ptr<BaseProfilerFactory>> m_profilers;
 

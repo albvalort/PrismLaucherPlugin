@@ -49,6 +49,9 @@ class V1 {
 
         // [update]
         ModPlatform::ResourceProvider provider{};
+        // Set when provider is PLUGIN. Kept in the metadata so ownership survives the plugin
+        // being disabled, removed or reinstalled.
+        QString plugin_id{};
         QVariant file_id{};
         QVariant project_id{};
         QString version_number{};

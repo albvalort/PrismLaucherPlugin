@@ -51,6 +51,9 @@ const char* ProviderCapabilities::name(ResourceProvider p)
             return "modrinth";
         case ResourceProvider::FLAME:
             return "curseforge";
+        case ResourceProvider::PLUGIN:
+            // Also the [update.plugin] table name in packwiz metadata, shared by every plugin.
+            return "plugin";
     }
     return {};
 }
@@ -62,6 +65,8 @@ QString ProviderCapabilities::readableName(ResourceProvider p)
             return "Modrinth";
         case ResourceProvider::FLAME:
             return "CurseForge";
+        case ResourceProvider::PLUGIN:
+            return QObject::tr("Plugin");
     }
     return {};
 }
@@ -74,14 +79,24 @@ QStringList ProviderCapabilities::hashType(ResourceProvider p)
         case ResourceProvider::FLAME:
             // Try newer formats first, fall back to old format
             return { "sha1", "md5", "murmur2" };
+        case ResourceProvider::PLUGIN:
+            // Plugins state the algorithm per version; this is not what downloads are verified with.
+            return { "sha512", "sha256", "sha1", "md5" };
     }
     return {};
 }
 
 QString getMetaURL(ResourceProvider provider, QVariant projectID)
 {
-    return ((provider == ModPlatform::ResourceProvider::FLAME) ? "https://www.curseforge.com/projects/" : "https://modrinth.com/mod/") +
-           projectID.toString();
+    switch (provider) {
+        case ResourceProvider::FLAME:
+            return "https://www.curseforge.com/projects/" + projectID.toString();
+        case ResourceProvider::MODRINTH:
+            return "https://modrinth.com/mod/" + projectID.toString();
+        case ResourceProvider::PLUGIN:
+            return {};
+    }
+    return {};
 }
 
 auto getModLoaderAsString(ModLoaderType type) -> const QString

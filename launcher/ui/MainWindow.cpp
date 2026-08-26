@@ -39,8 +39,10 @@
  */
 
 #include "Application.h"
+
 #include "BuildConfig.h"
 #include "FileSystem.h"
+#include "ui/widgets/PluginMenuButton.h"
 
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
@@ -380,6 +382,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     m_statusCenter = new QLabel(tr("Total playtime: 0s"), this);
     statusBar()->addPermanentWidget(m_statusLeft, 1);
     statusBar()->addPermanentWidget(m_statusCenter, 0);
+
+    // Hides itself when no plugin contributes a menu.
+    ui->mainToolBar->insertWidget(ui->actionCAT, new PluginMenuButton(this));
 
     // Add "manage accounts" button, right align
     QWidget* spacer = new QWidget();

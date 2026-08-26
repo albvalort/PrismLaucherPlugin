@@ -56,7 +56,8 @@ using enum ModLoaderType;
 Q_DECLARE_FLAGS(ModLoaderTypes, ModLoaderType)
 QList<ModLoaderType> modLoaderTypesToList(ModLoaderTypes flags);
 
-enum class ResourceProvider : std::uint8_t { MODRINTH, FLAME };
+// PLUGIN means "some plugin owns this"; the plugin's id is carried alongside in the metadata.
+enum class ResourceProvider : std::uint8_t { MODRINTH, FLAME, PLUGIN };
 
 enum class DependencyTypeValue : std::uint8_t { REQUIRED, OPTIONAL, INCOMPATIBLE, EMBEDDED, TOOL, INCLUDE, UNKNOWN };
 struct DependencyType : EnumWrapper<DependencyType, DependencyTypeValue> {
@@ -196,6 +197,7 @@ struct IndexedPack {
 
     QVariant addonId;
     ResourceProvider provider;
+    QString pluginId;  // only meaningful when provider is PLUGIN
     QString name;
     QString slug;
     QString description;
@@ -249,6 +251,7 @@ inline auto getOverrideDeps() -> QList<OverrideDep>
     };
 }
 
+// Empty when the provider has no addressable web page, which is always the case for plugins.
 QString getMetaURL(ResourceProvider provider, QVariant projectID);
 
 auto getModLoaderAsString(ModLoaderType type) -> const QString;

@@ -364,6 +364,14 @@ endif()
 
 find_package(ZLIB REQUIRED)
 
+# Lua powers the plugin sandbox. CMake's FindLua does not look for the versioned pkg-config names
+# most distributions ship, so fall back to those the same way we do for toml++ and libarchive.
+find_package(Lua 5.4)
+if(NOT LUA_FOUND)
+    find_package(PkgConfig REQUIRED)
+    pkg_search_module(Lua REQUIRED IMPORTED_TARGET lua5.4 lua-5.4 lua54 lua5.5 lua-5.5 lua)
+endif()
+
 
 include(ECMQtDeclareLoggingCategory)
 

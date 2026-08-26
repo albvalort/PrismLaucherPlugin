@@ -83,6 +83,72 @@ class PackwizTest : public QObject {
         QCOMPARE(metadata.file_id, 3509043);
         QCOMPARE(metadata.project_id, 327154);
     }
+
+    void roundTrip_Plugin()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        QDir index_dir(dir.path());
+
+        Packwiz::V1::Mod mod;
+        mod.slug = "example-mod";
+        mod.name = "Example Mod";
+        mod.filename = "example-mod-1.0.0.jar";
+        mod.side = ModPlatform::SideType::UniversalSide;
+        mod.mode = "url";
+        mod.url = QUrl("https://cdn.example.com/example-mod-1.0.0.jar");
+        mod.hash_format = "sha512";
+        mod.hash = "0123456789abcdef";
+        mod.provider = ModPlatform::ResourceProvider::PLUGIN;
+        mod.plugin_id = "my-platform";
+        mod.project_id = "project-abc";
+        mod.file_id = "version-xyz";
+        mod.version_number = "1.0.0";
+
+        Packwiz::V1::updateModIndex(index_dir, mod);
+        QVERIFY(index_dir.entryList().contains("example-mod.pw.toml"));
+
+        auto metadata = Packwiz::V1::getIndexForMod(index_dir, QString("example-mod"));
+
+        QVERIFY(metadata.isValid());
+        QCOMPARE(metadata.provider, ModPlatform::ResourceProvider::PLUGIN);
+        QCOMPARE(metadata.plugin_id, "my-platform");
+        QCOMPARE(metadata.project_id.toString(), "project-abc");
+        QCOMPARE(metadata.file_id.toString(), "version-xyz");
+        QCOMPARE(metadata.name, "Example Mod");
+        QCOMPARE(metadata.filename, "example-mod-1.0.0.jar");
+        QCOMPARE(metadata.hash_format, "sha512");
+        QCOMPARE(metadata.hash, "0123456789abcdef");
+    }
+
+    void writesGenericOwnershipTable()
+    {
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        QDir index_dir(dir.path());
+
+        Packwiz::V1::Mod mod;
+        mod.slug = "example-mod";
+        mod.name = "Example Mod";
+        mod.filename = "example-mod-1.0.0.jar";
+        mod.mode = "url";
+        mod.url = QUrl("https://cdn.example.com/example-mod-1.0.0.jar");
+        mod.hash_format = "sha512";
+        mod.hash = "0123456789abcdef";
+        mod.provider = ModPlatform::ResourceProvider::PLUGIN;
+        mod.plugin_id = "my-platform";
+        mod.project_id = "project-abc";
+        mod.file_id = "version-xyz";
+
+        Packwiz::V1::updateModIndex(index_dir, mod);
+
+        QFile written(index_dir.absoluteFilePath("example-mod.pw.toml"));
+        QVERIFY(written.open(QIODevice::ReadOnly));
+        const auto contents = QString::fromUtf8(written.readAll());
+
+        QVERIFY(contents.contains("[update.plugin]"));
+        QVERIFY(contents.contains("plugin-id = 'my-platform'") || contents.contains("plugin-id = \"my-platform\""));
+    }
 };
 
 QTEST_GUILESS_MAIN(PackwizTest)

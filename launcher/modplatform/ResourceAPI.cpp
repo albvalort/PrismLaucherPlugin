@@ -100,7 +100,7 @@ Task::Ptr ResourceAPI::getProjectVersions(VersionSearchArgs&& args, Callback<QVe
 
         QVector<ModPlatform::IndexedVersion> unsortedVersions;
         try {
-            auto arr = doc.isObject() ? doc.object()["data"].toArray() : doc.array();
+            auto arr = versionsDocumentToArray(doc);
 
             for (auto versionIter : arr) {
                 auto obj = versionIter.toObject();

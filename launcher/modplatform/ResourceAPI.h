@@ -150,6 +150,15 @@ class ResourceAPI {
      */
     virtual QJsonArray documentToArray(QJsonDocument& obj) const = 0;
 
+    /** Converts a version-listing response to a common array format.
+     *
+     *  Same reason as documentToArray. The default covers both shapes the built-in providers return.
+     */
+    virtual QJsonArray versionsDocumentToArray(const QJsonDocument& doc) const
+    {
+        return doc.isObject() ? doc.object()["data"].toArray() : doc.array();
+    }
+
     /** Functions to load data into a pack.
      *
      *  Those are needed for the same reason as documentToArray, and NEED to be re-implemented in the same way.

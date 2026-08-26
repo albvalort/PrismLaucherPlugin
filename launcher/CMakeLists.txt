@@ -482,6 +482,23 @@ set(META_SOURCES
     meta/Index.h
 )
 
+set(PLUGIN_SOURCES
+    plugins/PluginManifest.h
+    plugins/PluginManifest.cpp
+    plugins/LuaRuntime.h
+    plugins/LuaRuntime.cpp
+    plugins/Plugin.h
+    plugins/Plugin.cpp
+    plugins/PluginResourceAPI.h
+    plugins/PluginResourceAPI.cpp
+    plugins/PluginCheckUpdate.h
+    plugins/PluginCheckUpdate.cpp
+    plugins/PluginOwnership.h
+    plugins/PluginOwnership.cpp
+    plugins/PluginManager.h
+    plugins/PluginManager.cpp
+)
+
 set(API_SOURCES
     modplatform/ModIndex.h
     modplatform/ModIndex.cpp
@@ -767,6 +784,7 @@ set(LOGIC_SOURCES
     ${META_SOURCES}
     ${ICONS_SOURCES}
     ${API_SOURCES}
+    ${PLUGIN_SOURCES}
     ${FTB_SOURCES}
     ${FLAME_SOURCES}
     ${MODRINTH_SOURCES}
@@ -936,6 +954,11 @@ SET(LAUNCHER_SOURCES
     ui/pages/global/AccountListPage.h
     ui/pages/global/ExternalToolsPage.cpp
     ui/pages/global/ExternalToolsPage.h
+    ui/pages/global/PluginsPage.cpp
+    ui/pages/global/PluginsPage.h
+
+    ui/widgets/PluginMenuButton.cpp
+    ui/widgets/PluginMenuButton.h
     ui/pages/global/JavaPage.cpp
     ui/pages/global/JavaPage.h
     ui/pages/global/LanguagePage.cpp
@@ -1035,6 +1058,9 @@ SET(LAUNCHER_SOURCES
 
     ui/pages/modplatform/modrinth/ModrinthResourcePages.cpp
     ui/pages/modplatform/modrinth/ModrinthResourcePages.h
+
+    ui/pages/modplatform/plugin/PluginResourcePages.cpp
+    ui/pages/modplatform/plugin/PluginResourcePages.h
 
     # GUI - dialogs
     ui/dialogs/AboutDialog.cpp
@@ -1272,6 +1298,12 @@ if(TARGET PkgConfig::libarchive)
     target_link_libraries(Launcher_logic PkgConfig::libarchive)
 else()
     target_link_libraries(Launcher_logic LibArchive::LibArchive)
+endif()
+if(TARGET PkgConfig::Lua)
+    target_link_libraries(Launcher_logic PkgConfig::Lua)
+else()
+    target_link_libraries(Launcher_logic ${LUA_LIBRARIES})
+    target_include_directories(Launcher_logic PRIVATE ${LUA_INCLUDE_DIR})
 endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
